@@ -29,6 +29,7 @@
       <div class="modal-content history-modal">
         <div class="modal-header">
           <h3>下注记录</h3>
+          <button @click="exportToExcel" class="export-btn">导出Excel</button>
           <button @click="showHistoryModal = false" class="close-btn">&times;</button>
         </div>
         <div class="history-list">
@@ -51,6 +52,14 @@
                 :style="{ backgroundColor: getZodiacColor(num, 0.1) }"
               >
                 {{ num }} ({{ getZodiac(num) }}): {{ safeToFixed(record.bets[num]) }}
+              </div>
+              <div 
+                v-for="zodiac in getValidZodiacBets(record.zodiacBets)"
+                :key="`zodiac-${zodiac}`"
+                class="bet-detail"
+                :style="{ backgroundColor: getZodiacColorByZodiac(zodiac, 0.1) }"
+              >
+                {{ zodiac }}: {{ safeToFixed(record.zodiacBets[zodiac]) }}
               </div>
               <div 
                 v-if="record.colorBets && record.colorBets.red > 0"
@@ -110,6 +119,28 @@
           </div>
         </div>
         
+        <h3>生肖下注</h3>
+        <div class="zodiac-bet-container">
+          <div 
+            class="zodiac-bet-item" 
+            v-for="zodiac in zodiacList" 
+            :key="`zodiac-${zodiac}`"
+            :style="{ 
+              backgroundColor: getZodiacColorByZodiac(zodiac, 0.1),
+              borderColor: getZodiacColorByZodiac(zodiac, 1)
+            }"
+          >
+            <div class="zodiac-label">{{ zodiac }}</div>
+            <input
+              type="number"
+              min="0"
+              v-model.number="currentZodiacBets[zodiac]"
+              placeholder="金额"
+              @keydown.enter="submitBets"
+            />
+          </div>
+        </div>
+        
         <h3>波色下注</h3>
         <div class="color-bet-container">
           <div class="color-bet-item red-wave">
@@ -164,6 +195,23 @@
           </div>
         </div>
         
+        <h3>生肖下注结果</h3>
+        <div class="zodiac-result-container">
+          <div 
+            class="zodiac-result-item"
+            v-for="zodiac in zodiacList"
+            :key="`zodiac-result-${zodiac}`"
+            :style="{ 
+              backgroundColor: totalZodiacBets[zodiac] > 0 ? getZodiacColorByZodiac(zodiac, 0.4) : '',
+              borderColor: getZodiacColorByZodiac(zodiac, 1)
+            }"
+          >
+            <div class="zodiac-label">{{ zodiac }}</div>
+            <div class="result-amount">{{ safeToFixed(totalZodiacBets[zodiac]) }}</div>
+          </div>
+        </div>
+        
+        <h3>波色下注结果</h3>
         <div class="color-result-container">
           <div class="color-result-item red-wave">
             <div class="color-label">红波</div>
@@ -187,11 +235,13 @@
 
 <script>
 import { ref, computed, onMounted } from 'vue';
+import * as XLSX from 'xlsx';
 
 export default {
   setup() {
     const numbers = Array.from({ length: 49 }, (_, i) => i + 1);
     const inputFields = ref([]);
+    const zodiacList = ['鼠', '牛', '虎', '兔', '龙', '蛇', '马', '羊', '猴', '鸡', '狗', '猪'];
 
     // 生肖映射
     const zodiacMap = {
@@ -213,6 +263,8 @@ export default {
 
     // 当前输入的下注金额
     const currentBets = ref({});
+    // 当前生肖下注
+    const currentZodiacBets = ref({});
     // 当前波色下注
     const currentColorBets = ref({
       red: 0,
@@ -221,6 +273,8 @@ export default {
     });
     // 总下注金额记录
     const totalBets = ref({});
+    // 总生肖下注
+    const totalZodiacBets = ref({});
     // 总波色下注
     const totalColorBets = ref({
       red: 0,
@@ -247,6 +301,11 @@ export default {
       return Object.keys(bets || {}).filter(n => bets[n] > 0);
     };
 
+    // 获取有效的生肖下注
+    const getValidZodiacBets = (zodiacBets) => {
+      return Object.keys(zodiacBets || {}).filter(z => zodiacBets[z] > 0);
+    };
+
     // 获取单个号码的总下注金额
     const getTotalBet = (number) => {
       return Number(totalBets.value[number]) || 0;
@@ -257,6 +316,12 @@ export default {
       numbers.forEach(num => {
         currentBets.value[num] = 0;
         totalBets.value[num] = 0;
+      });
+      
+      // 初始化生肖下注
+      zodiacList.forEach(zodiac => {
+        currentZodiacBets.value[zodiac] = 0;
+        totalZodiacBets.value[zodiac] = 0;
       });
       
       // 初始化波色下注
@@ -287,6 +352,11 @@ export default {
         totalBets.value[num] = 0;
       });
       
+      // 重置生肖下注
+      zodiacList.forEach(zodiac => {
+        totalZodiacBets.value[zodiac] = 0;
+      });
+      
       // 重置波色下注
       totalColorBets.value = { red: 0, blue: 0, green: 0 };
       
@@ -296,6 +366,13 @@ export default {
           numbers.forEach(num => {
             totalBets.value[num] += Number(record.bets[num]) || 0;
           });
+          
+          // 计算生肖下注
+          if (record.zodiacBets) {
+            zodiacList.forEach(zodiac => {
+              totalZodiacBets.value[zodiac] += Number(record.zodiacBets[zodiac]) || 0;
+            });
+          }
           
           // 计算波色下注
           if (record.colorBets) {
@@ -315,8 +392,9 @@ export default {
     // 计算总下注金额
     const totalAmount = computed(() => {
       const numberTotal = numbers.reduce((sum, num) => sum + getTotalBet(num), 0);
+      const zodiacTotal = zodiacList.reduce((sum, zodiac) => sum + (totalZodiacBets.value[zodiac] || 0), 0);
       const colorTotal = Object.values(totalColorBets.value).reduce((sum, val) => sum + val, 0);
-      return numberTotal + colorTotal;
+      return numberTotal + zodiacTotal + colorTotal;
     });
 
     // 获取数字对应的生肖
@@ -324,9 +402,14 @@ export default {
       return zodiacMap[number] || '';
     };
 
-    // 获取生肖对应的颜色
+    // 获取数字对应的颜色
     const getZodiacColor = (number, opacity = 1) => {
       const zodiac = getZodiac(number);
+      return getZodiacColorByZodiac(zodiac, opacity);
+    };
+
+    // 根据生肖获取颜色
+    const getZodiacColorByZodiac = (zodiac, opacity = 1) => {
       if (colorGroups.red.includes(zodiac)) {
         return `rgba(255, 0, 0, ${opacity})`;
       } else if (colorGroups.blue.includes(zodiac)) {
@@ -347,6 +430,7 @@ export default {
     const submitBets = () => {
       let currentTotal = 0;
       const bets = {};
+      const zodiacBets = {};
       
       // 计算数字下注
       numbers.forEach(num => {
@@ -354,6 +438,14 @@ export default {
         bets[num] = amount;
         currentTotal += amount;
         currentBets.value[num] = 0;
+      });
+      
+      // 计算生肖下注
+      zodiacList.forEach(zodiac => {
+        const amount = Number(currentZodiacBets.value[zodiac]) || 0;
+        zodiacBets[zodiac] = amount;
+        currentTotal += amount;
+        currentZodiacBets.value[zodiac] = 0;
       });
       
       // 计算波色下注
@@ -372,6 +464,7 @@ export default {
         bettingHistory.value.unshift({
           timestamp: Date.now(),
           bets: bets,
+          zodiacBets: zodiacBets,
           colorBets: colorBets,
           total: currentTotal
         });
@@ -452,14 +545,83 @@ export default {
       }
     };
 
+    // 导出到Excel
+    const exportToExcel = () => {
+      if (bettingHistory.value.length === 0) {
+        alert('没有可导出的下注记录');
+        return;
+      }
+
+      // 准备数据
+      const data = [];
+      
+      // 添加表头
+      data.push([
+        '序号', '时间', '下注号码', '下注金额', '生肖下注', '生肖金额', 
+        '红波', '蓝波', '绿波', '总金额'
+      ]);
+      
+      // 添加数据行
+      bettingHistory.value.forEach((record, index) => {
+        const validBets = getValidBets(record.bets);
+        const betNumbers = validBets.map(num => `${num}(${getZodiac(num)})`).join(', ');
+        const betAmounts = validBets.map(num => safeToFixed(record.bets[num])).join(', ');
+        
+        const validZodiacBets = getValidZodiacBets(record.zodiacBets);
+        const zodiacNames = validZodiacBets.join(', ');
+        const zodiacAmounts = validZodiacBets.map(z => safeToFixed(record.zodiacBets[z])).join(', ');
+        
+        data.push([
+          index + 1,
+          formatTime(record.timestamp),
+          betNumbers,
+          betAmounts,
+          zodiacNames,
+          zodiacAmounts,
+          record.colorBets?.red ? safeToFixed(record.colorBets.red) : '0.00',
+          record.colorBets?.blue ? safeToFixed(record.colorBets.blue) : '0.00',
+          record.colorBets?.green ? safeToFixed(record.colorBets.green) : '0.00',
+          safeToFixed(record.total)
+        ]);
+      });
+      
+      // 创建工作表
+      const ws = XLSX.utils.aoa_to_sheet(data);
+      
+      // 设置列宽
+      ws['!cols'] = [
+        { wch: 6 },  // 序号
+        { wch: 20 }, // 时间
+        { wch: 30 }, // 下注号码
+        { wch: 15 }, // 下注金额
+        { wch: 15 }, // 生肖下注
+        { wch: 15 }, // 生肖金额
+        { wch: 8 },  // 红波
+        { wch: 8 },  // 蓝波
+        { wch: 8 },  // 绿波
+        { wch: 10 }  // 总金额
+      ];
+      
+      // 创建工作簿
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "下注记录");
+      
+      // 导出文件
+      const dateStr = new Date().toISOString().slice(0, 10);
+      XLSX.writeFile(wb, `下注记录_${dateStr}.xlsx`);
+    };
+
     // 初始化数据
     onMounted(initializeData);
 
     return {
       numbers,
+      zodiacList,
       currentBets,
+      currentZodiacBets,
       currentColorBets,
       totalBets,
+      totalZodiacBets,
       totalColorBets,
       bettingHistory,
       showSmartInput,
@@ -470,15 +632,18 @@ export default {
       inputFields,
       safeToFixed,
       getValidBets,
+      getValidZodiacBets,
       getTotalBet,
       totalAmount,
       getZodiac,
       getZodiacColor,
+      getZodiacColorByZodiac,
       formatTime,
       submitBets,
       openDeleteConfirm,
       deleteRecord,
-      parseSmartInput
+      parseSmartInput,
+      exportToExcel
     };
   }
 }
@@ -530,6 +695,20 @@ export default {
 
 .history-btn:hover {
   background-color: #5e35b1;
+}
+
+.export-btn {
+  background-color: #FF9800;
+  padding: 8px 15px;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.export-btn:hover {
+  background-color: #f57c00;
 }
 
 /* 通用弹窗样式 */
@@ -729,6 +908,8 @@ export default {
 }
 
 .left-panel, .right-panel {
+  height: 800px;
+  overflow-y: scroll;
   flex: 1;
   padding: 15px;
   border: 1px solid #ddd;
@@ -810,6 +991,52 @@ button:hover {
   color: #e74c3c;
 }
 
+/* 生肖下注样式 */
+.zodiac-bet-container {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.zodiac-bet-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 8px;
+  border-radius: 5px;
+  border: 1px solid;
+}
+
+.zodiac-label {
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.zodiac-result-container {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  margin: 15px 0;
+}
+
+.zodiac-result-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px;
+  border-radius: 5px;
+  border: 1px solid;
+}
+
+.zodiac-result-item .zodiac-label {
+  font-weight: bold;
+}
+
+.zodiac-result-item .result-amount {
+  color: #e74c3c;
+  font-weight: bold;
+}
+
 /* 波色下注样式 */
 .color-bet-container {
   display: flex;
@@ -866,12 +1093,6 @@ button:hover {
 
 .color-result-item .result-amount {
   color: #e74c3c;
-  font-weight: bold;
-}
-
-.total {
-  margin-top: 20px;
-  font-size: 18px;
   font-weight: bold;
 }
 </style>
