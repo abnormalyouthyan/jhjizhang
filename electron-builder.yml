@@ -1,5 +1,5 @@
 appId: com.electron.app
-productName: electron-app
+productName: 记账系统
 directories:
   buildResources: build
 files:
