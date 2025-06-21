@@ -3,13 +3,13 @@
     <div class="header">
       <h1>记账系统</h1>
     </div>
-    
+
     <!-- 智能识别弹窗 -->
     <div v-if="showSmartInput" class="modal-overlay">
       <div class="modal-content">
         <h3>智能识别下注</h3>
-        <textarea 
-          v-model="smartInputText" 
+        <textarea
+          v-model="smartInputText"
           placeholder="例如: 10,20,30-30 表示10/20/30各下注30元&#10;10,20,30--30 表示从这三个号码各减去30元"
           rows="5"
         ></textarea>
@@ -33,9 +33,9 @@
         </div>
         <div class="history-list">
           <div v-if="bettingHistory.length === 0" class="empty-history">暂无下注记录</div>
-          <div 
-            v-for="(record, index) in bettingHistory" 
-            :key="`record-${index}`" 
+          <div
+            v-for="(record, index) in bettingHistory"
+            :key="`record-${index}`"
             class="history-item"
           >
             <div class="history-header">
@@ -44,39 +44,48 @@
               <button @click="openDeleteConfirm(index)" class="delete-btn">删除</button>
             </div>
             <div class="history-details">
-              <div 
-                v-for="num in getValidBets(record.bets)" 
+              <div
+                v-for="num in getValidBets(record.bets)"
                 :key="`detail-${num}`"
                 class="bet-detail"
                 :style="{ backgroundColor: getZodiacColor(num, 0.1) }"
               >
-                {{ num }} ({{ getZodiac(num) }}): {{ record.bets[num] >= 0 ? '+' : '' }}{{ safeToFixed(record.bets[num]) }}
+                {{ num }} ({{ getZodiac(num) }}): {{ record.bets[num] >= 0 ? '+' : ''
+                }}{{ safeToFixed(record.bets[num]) }}
               </div>
-              <div 
+              <div
                 v-for="zodiac in getValidZodiacBets(record.zodiacBets)"
                 :key="`zodiac-${zodiac}`"
                 class="bet-detail"
                 :style="{ backgroundColor: getZodiacColorByZodiac(zodiac, 0.1) }"
               >
-                {{ zodiac }}: {{ record.zodiacBets[zodiac] >= 0 ? '+' : '' }}{{ safeToFixed(record.zodiacBets[zodiac]) }} ({{ getZodiacNumbers(zodiac).join(',') }})
+                {{ zodiac }}: {{ record.zodiacBets[zodiac] >= 0 ? '+' : ''
+                }}{{ safeToFixed(record.zodiacBets[zodiac]) }} ({{
+                  getZodiacNumbers(zodiac).join(',')
+                }})
               </div>
-              <div 
+              <div
                 v-if="record.colorBets && record.colorBets.red !== 0"
                 class="bet-detail red-wave"
               >
-                红波: {{ record.colorBets.red >= 0 ? '+' : '' }}{{ safeToFixed(record.colorBets.red) }} ({{ getColorNumbers('red').join(',') }})
+                红波: {{ record.colorBets.red >= 0 ? '+' : ''
+                }}{{ safeToFixed(record.colorBets.red) }} ({{ getColorNumbers('red').join(',') }})
               </div>
-              <div 
+              <div
                 v-if="record.colorBets && record.colorBets.blue !== 0"
                 class="bet-detail blue-wave"
               >
-                蓝波: {{ record.colorBets.blue >= 0 ? '+' : '' }}{{ safeToFixed(record.colorBets.blue) }} ({{ getColorNumbers('blue').join(',') }})
+                蓝波: {{ record.colorBets.blue >= 0 ? '+' : ''
+                }}{{ safeToFixed(record.colorBets.blue) }} ({{ getColorNumbers('blue').join(',') }})
               </div>
-              <div 
+              <div
                 v-if="record.colorBets && record.colorBets.green !== 0"
                 class="bet-detail green-wave"
               >
-                绿波: {{ record.colorBets.green >= 0 ? '+' : '' }}{{ safeToFixed(record.colorBets.green) }} ({{ getColorNumbers('green').join(',') }})
+                绿波: {{ record.colorBets.green >= 0 ? '+' : ''
+                }}{{ safeToFixed(record.colorBets.green) }} ({{
+                  getColorNumbers('green').join(',')
+                }})
               </div>
             </div>
           </div>
@@ -100,9 +109,9 @@
       <div class="left-panel">
         <h2>下注区域</h2>
         <div class="number-grid">
-          <div 
-            class="number-item" 
-            v-for="number in numbers" 
+          <div
+            class="number-item"
+            v-for="number in numbers"
             :key="`bet-${number}`"
             :style="{ backgroundColor: getZodiacColor(number, 0.2) }"
           >
@@ -116,14 +125,14 @@
             />
           </div>
         </div>
-        
+
         <h3>生肖下注</h3>
         <div class="zodiac-bet-container">
-          <div 
-            class="zodiac-bet-item" 
-            v-for="zodiac in zodiacList" 
+          <div
+            class="zodiac-bet-item"
+            v-for="zodiac in zodiacList"
             :key="`zodiac-${zodiac}`"
-            :style="{ 
+            :style="{
               backgroundColor: getZodiacColorByZodiac(zodiac, 0.1),
               borderColor: getZodiacColorByZodiac(zodiac, 1)
             }"
@@ -138,7 +147,7 @@
             <div class="zodiac-numbers">{{ getZodiacNumbers(zodiac).join(',') }}</div>
           </div>
         </div>
-        
+
         <h3>波色下注</h3>
         <div class="color-bet-container">
           <div class="color-bet-item red-wave">
@@ -173,7 +182,7 @@
           </div>
         </div>
         <div class="header-buttons">
-          <button @click="submitBets"  class="submit-btn">提交下注</button>
+          <button @click="submitBets" class="submit-btn">提交下注</button>
           <button @click="showSmartInput = true" class="smart-recognize-btn">智能识别</button>
           <button @click="showHistoryModal = true" class="history-btn">下注记录</button>
         </div>
@@ -186,7 +195,7 @@
             class="result-item"
             v-for="number in numbers"
             :key="`result-${number}`"
-            :style="{ 
+            :style="{
               backgroundColor: getTotalBet(number) > 0 ? getZodiacColor(number, 0.4) : '',
               borderColor: getZodiacColor(number, 1)
             }"
@@ -195,15 +204,16 @@
             <div class="result-amount">{{ safeToFixed(getTotalBet(number)) }}</div>
           </div>
         </div>
-        
+
         <h3>生肖下注结果</h3>
         <div class="zodiac-result-container">
-          <div 
+          <div
             class="zodiac-result-item"
             v-for="zodiac in zodiacList"
             :key="`zodiac-result-${zodiac}`"
-            :style="{ 
-              backgroundColor: totalZodiacBets[zodiac] > 0 ? getZodiacColorByZodiac(zodiac, 0.4) : '',
+            :style="{
+              backgroundColor:
+                totalZodiacBets[zodiac] > 0 ? getZodiacColorByZodiac(zodiac, 0.4) : '',
               borderColor: getZodiacColorByZodiac(zodiac, 1)
             }"
           >
@@ -211,7 +221,7 @@
             <div class="result-amount">{{ safeToFixed(totalZodiacBets[zodiac]) }}</div>
           </div>
         </div>
-        
+
         <h3>波色下注结果</h3>
         <div class="color-result-container">
           <div class="color-result-item red-wave">
@@ -227,7 +237,7 @@
             <div class="result-amount">{{ safeToFixed(totalColorBets.green) }}</div>
           </div>
         </div>
-        
+
         <div class="total">总下注金额: {{ safeToFixed(totalAmount) }}</div>
       </div>
     </div>
@@ -235,299 +245,341 @@
 </template>
 
 <script>
-import { ref, computed, onMounted } from 'vue';
-import * as XLSX from 'xlsx';
+import { ref, computed, onMounted } from 'vue'
+import * as XLSX from 'xlsx'
 
 export default {
   setup() {
-    const numbers = Array.from({ length: 49 }, (_, i) => i + 1);
-    const inputFields = ref([]);
-    const zodiacList = ['鼠', '牛', '虎', '兔', '龙', '蛇', '马', '羊', '猴', '鸡', '狗', '猪'];
+    const numbers = Array.from({ length: 49 }, (_, i) => i + 1)
+    const inputFields = ref([])
+    const zodiacList = ['鼠', '牛', '虎', '兔', '龙', '蛇', '马', '羊', '猴', '鸡', '狗', '猪']
 
     // 生肖映射
     const zodiacMap = {
-      1: '蛇', 2: '龙', 3: '兔', 4: '虎', 5: '牛', 6: '鼠', 7: '猪',
-      8: '狗', 9: '鸡', 10: '猴', 11: '羊', 12: '马', 13: '蛇', 14: '龙',
-      15: '兔', 16: '虎', 17: '牛', 18: '鼠', 19: '猪', 20: '狗', 21: '鸡',
-      22: '猴', 23: '羊', 24: '马', 25: '蛇', 26: '龙', 27: '兔', 28: '虎',
-      29: '牛', 30: '鼠', 31: '猪', 32: '狗', 33: '鸡', 34: '猴', 35: '羊',
-      36: '马', 37: '蛇', 38: '龙', 39: '兔', 40: '虎', 41: '牛', 42: '鼠',
-      43: '猪', 44: '狗', 45: '鸡', 46: '猴', 47: '羊', 48: '马', 49: '蛇'
-    };
+      1: '蛇',
+      2: '龙',
+      3: '兔',
+      4: '虎',
+      5: '牛',
+      6: '鼠',
+      7: '猪',
+      8: '狗',
+      9: '鸡',
+      10: '猴',
+      11: '羊',
+      12: '马',
+      13: '蛇',
+      14: '龙',
+      15: '兔',
+      16: '虎',
+      17: '牛',
+      18: '鼠',
+      19: '猪',
+      20: '狗',
+      21: '鸡',
+      22: '猴',
+      23: '羊',
+      24: '马',
+      25: '蛇',
+      26: '龙',
+      27: '兔',
+      28: '虎',
+      29: '牛',
+      30: '鼠',
+      31: '猪',
+      32: '狗',
+      33: '鸡',
+      34: '猴',
+      35: '羊',
+      36: '马',
+      37: '蛇',
+      38: '龙',
+      39: '兔',
+      40: '虎',
+      41: '牛',
+      42: '鼠',
+      43: '猪',
+      44: '狗',
+      45: '鸡',
+      46: '猴',
+      47: '羊',
+      48: '马',
+      49: '蛇'
+    }
 
     // 生肖反向映射
-    const zodiacToNumbers = {};
-    zodiacList.forEach(zodiac => {
-      zodiacToNumbers[zodiac] = [];
-    });
-    numbers.forEach(num => {
-      const zodiac = zodiacMap[num];
+    const zodiacToNumbers = {}
+    zodiacList.forEach((zodiac) => {
+      zodiacToNumbers[zodiac] = []
+    })
+    numbers.forEach((num) => {
+      const zodiac = zodiacMap[num]
       if (zodiac && zodiacToNumbers[zodiac]) {
-        zodiacToNumbers[zodiac].push(num);
+        zodiacToNumbers[zodiac].push(num)
       }
-    });
+    })
 
     // 波色分组（直接基于数字）
     const colorToNumbers = {
       red: [1, 2, 7, 8, 12, 13, 18, 19, 23, 24, 29, 30, 34, 35, 40, 45, 46],
       blue: [3, 4, 9, 10, 14, 15, 20, 25, 26, 31, 36, 37, 41, 42, 47, 48],
       green: [5, 6, 11, 16, 17, 21, 22, 27, 28, 32, 33, 38, 39, 43, 44, 49]
-    };
+    }
 
     // 获取波色对应的数字
     const getColorNumbers = (color) => {
-      return colorToNumbers[color] || [];
-    };
+      return colorToNumbers[color] || []
+    }
     // 当前输入的下注金额
-    const currentBets = ref({});
+    const currentBets = ref({})
     // 当前生肖下注
-    const currentZodiacBets = ref({});
+    const currentZodiacBets = ref({})
     // 当前波色下注
     const currentColorBets = ref({
       red: 0,
       blue: 0,
       green: 0
-    });
+    })
     // 总下注金额记录
-    const totalBets = ref({});
+    const totalBets = ref({})
     // 总生肖下注
-    const totalZodiacBets = ref({});
+    const totalZodiacBets = ref({})
     // 总波色下注
     const totalColorBets = ref({
       red: 0,
       blue: 0,
       green: 0
-    });
+    })
     // 下注历史记录
-    const bettingHistory = ref([]);
+    const bettingHistory = ref([])
     // 弹窗状态
-    const showSmartInput = ref(false);
-    const showHistoryModal = ref(false);
-    const showConfirmModal = ref(false);
-    const showSuccess = ref(false);
-    const smartInputText = ref('');
-    const deleteIndex = ref(null);
+    const showSmartInput = ref(false)
+    const showHistoryModal = ref(false)
+    const showConfirmModal = ref(false)
+    const showSuccess = ref(false)
+    const smartInputText = ref('')
+    const deleteIndex = ref(null)
 
     // 获取生肖对应的数字
     const getZodiacNumbers = (zodiac) => {
-      return zodiacToNumbers[zodiac] || [];
-    };
+      return zodiacToNumbers[zodiac] || []
+    }
 
     // 安全数值格式化
     const safeToFixed = (value, digits = 2) => {
-      const num = Number(value);
-      return isNaN(num) ? '0.00' : num.toFixed(digits);
-    };
+      const num = Number(value)
+      return isNaN(num) ? '0.00' : num.toFixed(digits)
+    }
 
     // 获取有效的下注号码
     const getValidBets = (bets) => {
-      return Object.keys(bets || {}).filter(n => bets[n] !== 0); // 修改为不等于0
-    };
+      return Object.keys(bets || {}).filter((n) => bets[n] !== 0) // 修改为不等于0
+    }
 
     // 获取有效的生肖下注
     const getValidZodiacBets = (zodiacBets) => {
-      return Object.keys(zodiacBets || {}).filter(z => zodiacBets[z] !== 0); // 修改为不等于0
-    };
+      return Object.keys(zodiacBets || {}).filter((z) => zodiacBets[z] !== 0) // 修改为不等于0
+    }
 
     // 获取单个号码的总下注金额
     const getTotalBet = (number) => {
-      const total = Number(totalBets.value[number]) || 0;
-      return total > 0 ? total : 0; // 确保不会显示负数
-    };
+      const total = Number(totalBets.value[number]) || 0
+      return total > 0 ? total : 0 // 确保不会显示负数
+    }
 
     // 初始化数据
     const initializeData = () => {
-      numbers.forEach(num => {
-        currentBets.value[num] = 0;
-        totalBets.value[num] = 0;
-      });
-      
+      numbers.forEach((num) => {
+        currentBets.value[num] = 0
+        totalBets.value[num] = 0
+      })
+
       // 初始化生肖下注
-      zodiacList.forEach(zodiac => {
-        currentZodiacBets.value[zodiac] = 0;
-        totalZodiacBets.value[zodiac] = 0;
-      });
-      
+      zodiacList.forEach((zodiac) => {
+        currentZodiacBets.value[zodiac] = 0
+        totalZodiacBets.value[zodiac] = 0
+      })
+
       // 初始化波色下注
-      currentColorBets.value = { red: 0, blue: 0, green: 0 };
-      totalColorBets.value = { red: 0, blue: 0, green: 0 };
-      
-      loadHistory();
-    };
+      currentColorBets.value = { red: 0, blue: 0, green: 0 }
+      totalColorBets.value = { red: 0, blue: 0, green: 0 }
+
+      loadHistory()
+    }
 
     // 从本地存储加载历史记录
     const loadHistory = () => {
-      const savedHistory = localStorage.getItem('bettingHistory');
+      const savedHistory = localStorage.getItem('bettingHistory')
       if (savedHistory) {
         try {
-          bettingHistory.value = JSON.parse(savedHistory) || [];
-          recalculateTotalBets();
+          bettingHistory.value = JSON.parse(savedHistory) || []
+          recalculateTotalBets()
         } catch (e) {
-          console.error("解析历史记录出错:", e);
-          bettingHistory.value = [];
+          console.error('解析历史记录出错:', e)
+          bettingHistory.value = []
         }
       }
-    };
+    }
 
     // 重新计算总下注金额（支持负数）
     const recalculateTotalBets = () => {
       // 重置数字下注
-      numbers.forEach(num => {
-        totalBets.value[num] = 0;
-      });
+      numbers.forEach((num) => {
+        totalBets.value[num] = 0
+      })
 
       // 重置生肖下注
-      zodiacList.forEach(zodiac => {
-        totalZodiacBets.value[zodiac] = 0;
-      });
+      zodiacList.forEach((zodiac) => {
+        totalZodiacBets.value[zodiac] = 0
+      })
 
       // 重置波色下注
-      totalColorBets.value = { red: 0, blue: 0, green: 0 };
+      totalColorBets.value = { red: 0, blue: 0, green: 0 }
 
-      bettingHistory.value.forEach(record => {
+      bettingHistory.value.forEach((record) => {
         if (record && record.bets) {
           // 统计数字下注金额（支持负数）
-          numbers.forEach(num => {
-            totalBets.value[num] += Number(record.bets[num]) || 0;
-          });
+          numbers.forEach((num) => {
+            totalBets.value[num] += Number(record.bets[num]) || 0
+          })
 
           // 生肖下注只汇总到生肖下注区域（支持负数）
           if (record.zodiacBets) {
-            zodiacList.forEach(zodiac => {
-              const zodiacAmount = Number(record.zodiacBets[zodiac]) || 0;
-              totalZodiacBets.value[zodiac] += zodiacAmount * getZodiacNumbers(zodiac).length;
-            });
+            zodiacList.forEach((zodiac) => {
+              const zodiacAmount = Number(record.zodiacBets[zodiac]) || 0
+              totalZodiacBets.value[zodiac] += zodiacAmount * getZodiacNumbers(zodiac).length
+            })
           }
 
           // 波色下注只汇总到波色区域（支持负数）
           if (record.colorBets) {
-            const redAmount = Number(record.colorBets.red) || 0;
-            totalColorBets.value.red += redAmount * getColorNumbers('red').length;
+            const redAmount = Number(record.colorBets.red) || 0
+            totalColorBets.value.red += redAmount * getColorNumbers('red').length
 
-            const blueAmount = Number(record.colorBets.blue) || 0;
-            totalColorBets.value.blue += blueAmount * getColorNumbers('blue').length;
+            const blueAmount = Number(record.colorBets.blue) || 0
+            totalColorBets.value.blue += blueAmount * getColorNumbers('blue').length
 
-            const greenAmount = Number(record.colorBets.green) || 0;
-            totalColorBets.value.green += greenAmount * getColorNumbers('green').length;
+            const greenAmount = Number(record.colorBets.green) || 0
+            totalColorBets.value.green += greenAmount * getColorNumbers('green').length
           }
         }
-      });
+      })
 
       // 确保金额不会为负数
-      numbers.forEach(num => {
-        if (totalBets.value[num] < 0) totalBets.value[num] = 0;
-      });
-      zodiacList.forEach(zodiac => {
-        if (totalZodiacBets.value[zodiac] < 0) totalZodiacBets.value[zodiac] = 0;
-      });
-      if (totalColorBets.value.red < 0) totalColorBets.value.red = 0;
-      if (totalColorBets.value.blue < 0) totalColorBets.value.blue = 0;
-      if (totalColorBets.value.green < 0) totalColorBets.value.green = 0;
-    };
+      numbers.forEach((num) => {
+        if (totalBets.value[num] < 0) totalBets.value[num] = 0
+      })
+      zodiacList.forEach((zodiac) => {
+        if (totalZodiacBets.value[zodiac] < 0) totalZodiacBets.value[zodiac] = 0
+      })
+      if (totalColorBets.value.red < 0) totalColorBets.value.red = 0
+      if (totalColorBets.value.blue < 0) totalColorBets.value.blue = 0
+      if (totalColorBets.value.green < 0) totalColorBets.value.green = 0
+    }
 
     // 保存历史记录到本地存储
     const saveHistory = () => {
-      localStorage.setItem('bettingHistory', JSON.stringify(bettingHistory.value));
-    };
+      localStorage.setItem('bettingHistory', JSON.stringify(bettingHistory.value))
+    }
 
     // 计算总下注金额
     const totalAmount = computed(() => {
-      const numberTotal = numbers.reduce((sum, num) => sum + (getTotalBet(num) || 0), 0);
+      const numberTotal = numbers.reduce((sum, num) => sum + (getTotalBet(num) || 0), 0)
 
       const zodiacTotal = zodiacList.reduce((sum, zodiac) => {
-        const amount = Number(totalZodiacBets.value[zodiac]) || 0;
-        return sum + (amount > 0 ? amount : 0);
-      }, 0);
+        const amount = Number(totalZodiacBets.value[zodiac]) || 0
+        return sum + (amount > 0 ? amount : 0)
+      }, 0)
 
       const colorTotal = ['red', 'blue', 'green'].reduce((sum, color) => {
-        const amount = Number(totalColorBets.value[color]) || 0;
-        return sum + (amount > 0 ? amount : 0);
-      }, 0);
+        const amount = Number(totalColorBets.value[color]) || 0
+        return sum + (amount > 0 ? amount : 0)
+      }, 0)
 
-      return numberTotal + zodiacTotal + colorTotal;
-    });
+      return numberTotal + zodiacTotal + colorTotal
+    })
 
     // 获取数字对应的生肖
     const getZodiac = (number) => {
-      return zodiacMap[number] || '';
-    };
+      return zodiacMap[number] || ''
+    }
 
     // 获取数字对应的颜色
     const getZodiacColor = (number, opacity = 1) => {
       if (colorToNumbers.red.includes(number)) {
-        return `rgba(255, 0, 0, ${opacity})`;
+        return `rgba(255, 0, 0, ${opacity})`
       } else if (colorToNumbers.blue.includes(number)) {
-        return `rgba(0, 0, 255, ${opacity})`;
+        return `rgba(0, 0, 255, ${opacity})`
       } else if (colorToNumbers.green.includes(number)) {
-        return `rgba(0, 255, 0, ${opacity})`;
+        return `rgba(0, 255, 0, ${opacity})`
       }
-      return '';
-    };
+      return ''
+    }
 
     // 根据生肖获取颜色
     const getZodiacColorByZodiac = (zodiac, opacity = 1) => {
       // 查找该生肖对应的第一个数字的颜色
-      const numbers = getZodiacNumbers(zodiac);
+      const numbers = getZodiacNumbers(zodiac)
       if (numbers.length > 0) {
-        return getZodiacColor(numbers[0], opacity);
+        return getZodiacColor(numbers[0], opacity)
       }
-      return '';
-    };
+      return ''
+    }
 
     // 格式化时间显示
     const formatTime = (timestamp) => {
-      const date = new Date(timestamp);
-      return `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')} ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}:${date.getSeconds().toString().padStart(2, '0')}`;
-    };
+      const date = new Date(timestamp)
+      return `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')} ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}:${date.getSeconds().toString().padStart(2, '0')}`
+    }
 
     // 提交下注（支持负数）
     const submitBets = () => {
-      let currentTotal = 0;
-      const bets = {};
-      const zodiacBets = {};
-      
+      let currentTotal = 0
+      const bets = {}
+      const zodiacBets = {}
+
       // 计算数字下注（允许负数）
-      numbers.forEach(num => {
-        const amount = Number(currentBets.value[num]) || 0;
-        bets[num] = amount;
-        currentTotal += amount;
-        currentBets.value[num] = 0;
-      });
-      
+      numbers.forEach((num) => {
+        const amount = Number(currentBets.value[num]) || 0
+        bets[num] = amount
+        currentTotal += amount
+        currentBets.value[num] = 0
+      })
+
       // 计算生肖下注（允许负数）
-      zodiacList.forEach(zodiac => {
-        const amount = Number(currentZodiacBets.value[zodiac]) || 0;
-        zodiacBets[zodiac] = amount;
+      zodiacList.forEach((zodiac) => {
+        const amount = Number(currentZodiacBets.value[zodiac]) || 0
+        zodiacBets[zodiac] = amount
         if (amount !== 0) {
-          const zodiacNums = getZodiacNumbers(zodiac);
-          currentTotal += amount * zodiacNums.length;
+          const zodiacNums = getZodiacNumbers(zodiac)
+          currentTotal += amount * zodiacNums.length
         }
-        currentZodiacBets.value[zodiac] = 0;
-      });
-      
+        currentZodiacBets.value[zodiac] = 0
+      })
+
       // 计算波色下注（允许负数）
       const colorBets = {
         red: Number(currentColorBets.value.red) || 0,
         blue: Number(currentColorBets.value.blue) || 0,
         green: Number(currentColorBets.value.green) || 0
-      };
-      
+      }
+
       if (colorBets.red !== 0) {
-        const redNums = getColorNumbers('red');
-        currentTotal += colorBets.red * redNums.length;
+        const redNums = getColorNumbers('red')
+        currentTotal += colorBets.red * redNums.length
       }
       if (colorBets.blue !== 0) {
-        const blueNums = getColorNumbers('blue');
-        currentTotal += colorBets.blue * blueNums.length;
+        const blueNums = getColorNumbers('blue')
+        currentTotal += colorBets.blue * blueNums.length
       }
       if (colorBets.green !== 0) {
-        const greenNums = getColorNumbers('green');
-        currentTotal += colorBets.green * greenNums.length;
+        const greenNums = getColorNumbers('green')
+        currentTotal += colorBets.green * greenNums.length
       }
-      
+
       // 重置波色下注输入
-      currentColorBets.value = { red: 0, blue: 0, green: 0 };
-      
+      currentColorBets.value = { red: 0, blue: 0, green: 0 }
+
       // 只要有变动（正数或负数）就记录
       if (currentTotal !== 0) {
         bettingHistory.value.unshift({
@@ -536,120 +588,140 @@ export default {
           zodiacBets: zodiacBets,
           colorBets: colorBets,
           total: currentTotal
-        });
-        saveHistory();
-        recalculateTotalBets();
+        })
+        saveHistory()
+        recalculateTotalBets()
       }
-      showSuccess.value = true;
+      showSuccess.value = true
       // 2秒后自动隐藏成功提示
       setTimeout(() => {
-        showSuccess.value = false;
-      }, 2000);
-      
-    };
+        showSuccess.value = false
+      }, 2000)
+    }
 
     // 打开删除确认弹窗
     const openDeleteConfirm = (index) => {
-      deleteIndex.value = index;
-      showConfirmModal.value = true;
-      showHistoryModal.value = false;
-    };
+      deleteIndex.value = index
+      showConfirmModal.value = true
+      showHistoryModal.value = false
+    }
 
     // 删除记录
     const deleteRecord = () => {
       if (deleteIndex.value !== null) {
-        bettingHistory.value.splice(deleteIndex.value, 1);
-        saveHistory();
-        recalculateTotalBets();
+        bettingHistory.value.splice(deleteIndex.value, 1)
+        saveHistory()
+        recalculateTotalBets()
       }
-      showConfirmModal.value = false;
-      deleteIndex.value = null;
-      showHistoryModal.value = true;
-    };
-
-    // 智能识别输入（支持负数）
+      showConfirmModal.value = false
+      deleteIndex.value = null
+      showHistoryModal.value = true
+    }
+    // 智能识别输入（支持多种格式和负数）
     const parseSmartInput = () => {
       try {
-        const input = smartInputText.value.trim();
-        if (!input) return;
+        const input = smartInputText.value.trim()
+        if (!input) return
 
-        // 统一处理所有类型的逗号（不区分中英文）
-        const normalizedInput = input.replace(/，/g, ','); // 中文逗号转英文
-        
-        // 分割金额部分（最后一个-后的数字）
-        const amountIndex = normalizedInput.lastIndexOf('-');
-        let amount = 0;
-        let numbersPart = normalizedInput;
-        
-        if (amountIndex > 0) {
-          // 检查是否有两个连续的-（表示负数）
-          if (amountIndex > 0 && normalizedInput[amountIndex - 1] === '-') {
-            amount = -parseFloat(normalizedInput.substring(amountIndex + 1)) || 0;
-            numbersPart = normalizedInput.substring(0, amountIndex - 1);
-          } else {
-            amount = parseFloat(normalizedInput.substring(amountIndex + 1)) || 0;
-            numbersPart = normalizedInput.substring(0, amountIndex);
+        // 统一处理所有分隔符（中文顿号、中文逗号、英文逗号、斜杠、点、句号）
+        // 但保留连续点号作为分隔符的特殊情况
+        let normalizedInput = input
+          .replace(/、|，|。|\/|\.(?=\D)/g, ',') // 替换非数字间的点号
+          .replace(/\s+/g, '') // 移除所有空格
+
+        // 特殊处理连续点号分隔的数字（如1.2.3-10）
+        if (/^\d+(\.\d+)+[-各粒个]/.test(normalizedInput)) {
+          normalizedInput = normalizedInput.replace(/\./g, ',')
+        }
+
+        // 解析金额部分（支持"各X"/"一粒X"/"一个X"/"-X"等格式）
+        const amountPattern = /((各|一粒|一个|-)(\d+))|(-?\d+)$/
+        const amountMatch = normalizedInput.match(amountPattern)
+
+        let amount = 0
+        let numbersPart = normalizedInput
+
+        if (amountMatch) {
+          // 处理"各X"/"一粒X"/"一个X"格式
+          if (amountMatch[2]) {
+            amount = parseFloat(amountMatch[3]) || 0
+            numbersPart = normalizedInput.substring(0, amountMatch.index)
+          }
+          // 处理"-X"或单独数字格式
+          else if (amountMatch[4]) {
+            amount = parseFloat(amountMatch[4]) || 0
+            numbersPart = normalizedInput.substring(0, amountMatch.index)
           }
         }
 
         if (amount === 0) {
-          alert('请使用"号码,号码,号码-金额"格式，例如: 10,20,30-30 或 10,20,30--30（表示减去30）');
-          return;
+          return // 无效金额不处理
         }
 
-        // 处理号码部分（支持中英文逗号和空格分隔）
-        const numberStrings = numbersPart.split(/[,，\s]+/).filter(Boolean);
-        const validNumbers = [];
-        
-        numberStrings.forEach(numStr => {
-          const num = parseInt(numStr.trim());
+        // 处理号码部分（支持多种分隔符）
+        const numberStrings = numbersPart.split(',')
+        const validNumbers = []
+
+        numberStrings.forEach((numStr) => {
+          if (!numStr) return
+          const num = parseInt(numStr)
           if (!isNaN(num) && num >= 1 && num <= 49) {
-            validNumbers.push(num);
+            validNumbers.push(num)
           }
-        });
+        })
 
         if (validNumbers.length === 0) {
-          alert('未找到有效号码（1-49）');
-          return;
+          return // 无有效号码不处理
         }
 
         // 应用到当前下注（累加模式，支持负数）
-        validNumbers.forEach(num => {
-          currentBets.value[num] = (currentBets.value[num] || 0) + amount;
-        });
+        validNumbers.forEach((num) => {
+          currentBets.value[num] = (currentBets.value[num] || 0) + amount
+        })
 
-        showSmartInput.value = false;
-        smartInputText.value = '';
+        showSmartInput.value = false
+        smartInputText.value = ''
       } catch (error) {
-        alert('解析失败，请检查输入格式');
-        console.error('智能识别错误:', error);
+        console.error('智能识别错误:', error)
       }
-    };
+    }
 
     // 导出到Excel
     const exportToExcel = () => {
       if (bettingHistory.value.length === 0) {
-        return;
+        return
       }
       // 准备数据
-      const data = [];
-      
+      const data = []
+
       // 添加表头
       data.push([
-        '序号', '时间', '下注号码', '下注金额', '生肖下注', '生肖金额', 
-        '红波', '蓝波', '绿波', '总金额'
-      ]);
-      
+        '序号',
+        '时间',
+        '下注号码',
+        '下注金额',
+        '生肖下注',
+        '生肖金额',
+        '红波',
+        '蓝波',
+        '绿波',
+        '总金额'
+      ])
+
       // 添加数据行
       bettingHistory.value.forEach((record, index) => {
-        const validBets = getValidBets(record.bets);
-        const betNumbers = validBets.map(num => `${num}(${getZodiac(num)})`).join(', ');
-        const betAmounts = validBets.map(num => (record.bets[num] >= 0 ? '+' : '') + safeToFixed(record.bets[num])).join(', ');
-        
-        const validZodiacBets = getValidZodiacBets(record.zodiacBets);
-        const zodiacNames = validZodiacBets.join(', ');
-        const zodiacAmounts = validZodiacBets.map(z => (record.zodiacBets[z] >= 0 ? '+' : '') + safeToFixed(record.zodiacBets[z])).join(', ');
-        
+        const validBets = getValidBets(record.bets)
+        const betNumbers = validBets.map((num) => `${num}(${getZodiac(num)})`).join(', ')
+        const betAmounts = validBets
+          .map((num) => (record.bets[num] >= 0 ? '+' : '') + safeToFixed(record.bets[num]))
+          .join(', ')
+
+        const validZodiacBets = getValidZodiacBets(record.zodiacBets)
+        const zodiacNames = validZodiacBets.join(', ')
+        const zodiacAmounts = validZodiacBets
+          .map((z) => (record.zodiacBets[z] >= 0 ? '+' : '') + safeToFixed(record.zodiacBets[z]))
+          .join(', ')
+
         data.push([
           index + 1,
           formatTime(record.timestamp),
@@ -657,41 +729,47 @@ export default {
           betAmounts,
           zodiacNames,
           zodiacAmounts,
-          record.colorBets?.red ? (record.colorBets.red >= 0 ? '+' : '') + safeToFixed(record.colorBets.red) : '0.00',
-          record.colorBets?.blue ? (record.colorBets.blue >= 0 ? '+' : '') + safeToFixed(record.colorBets.blue) : '0.00',
-          record.colorBets?.green ? (record.colorBets.green >= 0 ? '+' : '') + safeToFixed(record.colorBets.green) : '0.00',
+          record.colorBets?.red
+            ? (record.colorBets.red >= 0 ? '+' : '') + safeToFixed(record.colorBets.red)
+            : '0.00',
+          record.colorBets?.blue
+            ? (record.colorBets.blue >= 0 ? '+' : '') + safeToFixed(record.colorBets.blue)
+            : '0.00',
+          record.colorBets?.green
+            ? (record.colorBets.green >= 0 ? '+' : '') + safeToFixed(record.colorBets.green)
+            : '0.00',
           safeToFixed(record.total)
-        ]);
-      });
-      
+        ])
+      })
+
       // 创建工作表
-      const ws = XLSX.utils.aoa_to_sheet(data);
-      
+      const ws = XLSX.utils.aoa_to_sheet(data)
+
       // 设置列宽
       ws['!cols'] = [
-        { wch: 6 },  // 序号
+        { wch: 6 }, // 序号
         { wch: 20 }, // 时间
         { wch: 30 }, // 下注号码
         { wch: 15 }, // 下注金额
         { wch: 15 }, // 生肖下注
         { wch: 15 }, // 生肖金额
-        { wch: 8 },  // 红波
-        { wch: 8 },  // 蓝波
-        { wch: 8 },  // 绿波
-        { wch: 10 }  // 总金额
-      ];
-      
+        { wch: 8 }, // 红波
+        { wch: 8 }, // 蓝波
+        { wch: 8 }, // 绿波
+        { wch: 10 } // 总金额
+      ]
+
       // 创建工作簿
-      const wb = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(wb, ws, "下注记录");
-      
+      const wb = XLSX.utils.book_new()
+      XLSX.utils.book_append_sheet(wb, ws, '下注记录')
+
       // 导出文件
-      const dateStr = new Date().toISOString().slice(0, 10);
-      XLSX.writeFile(wb, `下注记录_${dateStr}.xlsx`);
-    };
+      const dateStr = new Date().toISOString().slice(0, 10)
+      XLSX.writeFile(wb, `下注记录_${dateStr}.xlsx`)
+    }
 
     // 初始化数据
-    onMounted(initializeData);
+    onMounted(initializeData)
 
     return {
       numbers,
@@ -726,7 +804,7 @@ export default {
       deleteRecord,
       parseSmartInput,
       exportToExcel
-    };
+    }
   }
 }
 </script>
@@ -749,7 +827,8 @@ export default {
   gap: 20px;
 }
 
-.left-panel, .right-panel {
+.left-panel,
+.right-panel {
   flex: 1;
   padding: 15px;
   border-radius: 8px;
@@ -776,28 +855,32 @@ export default {
   text-align: center;
 }
 
-.zodiac-bet-container, .color-bet-container {
+.zodiac-bet-container,
+.color-bet-container {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 10px;
   margin-bottom: 20px;
 }
 
-.zodiac-bet-item, .color-bet-item {
+.zodiac-bet-item,
+.color-bet-item {
   padding: 8px;
   border-radius: 4px;
   text-align: center;
   border: 1px solid #ddd;
 }
 
-.zodiac-bet-item input, .color-bet-item input {
+.zodiac-bet-item input,
+.color-bet-item input {
   width: 80%;
   padding: 5px;
   margin-top: 5px;
   text-align: center;
 }
 
-.zodiac-numbers, .color-numbers {
+.zodiac-numbers,
+.color-numbers {
   font-size: 0.8em;
   color: #666;
   margin-top: 5px;
@@ -818,17 +901,17 @@ button {
 }
 
 .submit-btn {
-  background-color: #4CAF50;
+  background-color: #4caf50;
   color: white;
 }
 
 .smart-recognize-btn {
-  background-color: #2196F3;
+  background-color: #2196f3;
   color: white;
 }
 
 .history-btn {
-  background-color: #FF9800;
+  background-color: #ff9800;
   color: white;
 }
 
@@ -846,14 +929,16 @@ button {
   border: 1px solid #ddd;
 }
 
-.zodiac-result-container, .color-result-container {
+.zodiac-result-container,
+.color-result-container {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 10px;
   margin-bottom: 20px;
 }
 
-.zodiac-result-item, .color-result-item {
+.zodiac-result-item,
+.color-result-item {
   padding: 8px;
   border-radius: 4px;
   text-align: center;
@@ -901,8 +986,9 @@ button {
   gap: 10px;
 }
 
-.parse-btn, .confirm-btn {
-  background-color: #4CAF50;
+.parse-btn,
+.confirm-btn {
+  background-color: #4caf50;
   color: white;
 }
 
@@ -971,7 +1057,7 @@ button {
 }
 
 .export-btn {
-  background-color: #2196F3;
+  background-color: #2196f3;
   color: white;
 }
 
@@ -992,8 +1078,8 @@ button {
   position: fixed;
   top: 50%;
   left: 50%;
-  transform: translateX(-50%,-50%);
-  background-color: #4CAF50;
+  transform: translateX(-50%, -50%);
+  background-color: #4caf50;
   color: white;
   padding: 15px 30px;
   border-radius: 4px;
@@ -1003,9 +1089,17 @@ button {
 }
 
 @keyframes fadeInOut {
-  0% { opacity: 0; }
-  20% { opacity: 1; }
-  80% { opacity: 1; }
-  100% { opacity: 0; }
+  0% {
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+  }
+  80% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
 }
 </style>
