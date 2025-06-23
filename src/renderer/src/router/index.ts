@@ -4,5 +4,5 @@ import Home from "@renderer/views/Home.vue";
 
 export default createRouter({
     history:createWebHashHistory(),
-    routes:[{path:"/",component:Home}]
+    routes:[{path:'/',component:Home}]
 })

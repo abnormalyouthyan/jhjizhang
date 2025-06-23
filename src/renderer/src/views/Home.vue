@@ -217,7 +217,7 @@
               borderColor: getZodiacColorByZodiac(zodiac, 1)
             }"
           >
-            <div class="zodiac-label">{{ zodiac }} ({{ getZodiacNumbers(zodiac).join(',') }})</div>
+            <div class="zodiac-label">{{ zodiac }}</div>
             <div class="result-amount">{{ safeToFixed(totalZodiacBets[zodiac]) }}</div>
           </div>
         </div>
@@ -225,15 +225,15 @@
         <h3>波色下注结果</h3>
         <div class="color-result-container">
           <div class="color-result-item red-wave">
-            <div class="color-label">红波 ({{ getColorNumbers('red').join(',') }})</div>
+            <div class="color-label">红波</div>
             <div class="result-amount">{{ safeToFixed(totalColorBets.red) }}</div>
           </div>
           <div class="color-result-item blue-wave">
-            <div class="color-label">蓝波 ({{ getColorNumbers('blue').join(',') }})</div>
+            <div class="color-label">蓝波 </div>
             <div class="result-amount">{{ safeToFixed(totalColorBets.blue) }}</div>
           </div>
           <div class="color-result-item green-wave">
-            <div class="color-label">绿波 ({{ getColorNumbers('green').join(',') }})</div>
+            <div class="color-label">绿波</div>
             <div class="result-amount">{{ safeToFixed(totalColorBets.green) }}</div>
           </div>
         </div>
@@ -563,7 +563,6 @@ export default {
         blue: Number(currentColorBets.value.blue) || 0,
         green: Number(currentColorBets.value.green) || 0
       }
-
       if (colorBets.red !== 0) {
         const redNums = getColorNumbers('red')
         currentTotal += colorBets.red * redNums.length
@@ -591,12 +590,12 @@ export default {
         })
         saveHistory()
         recalculateTotalBets()
-      }
-      showSuccess.value = true
-      // 2秒后自动隐藏成功提示
-      setTimeout(() => {
-        showSuccess.value = false
-      }, 2000)
+        showSuccess.value = true
+        // 2秒后自动隐藏成功提示
+        setTimeout(() => {
+          showSuccess.value = false
+        }, 2000)
+        }
     }
 
     // 打开删除确认弹窗
@@ -814,44 +813,60 @@ export default {
   font-family: Arial, sans-serif;
   max-width: 1200px;
   margin: 0 auto;
-  padding: 20px;
+  padding: 10px;
+  font-size: 13px;
 }
 
 .header {
   text-align: center;
-  margin-bottom: 20px;
+  margin-bottom: 10px;
+}
+
+.header h1 {
+  font-size: 1.3em;
+  margin: 5px 0;
 }
 
 .betting-container {
   display: flex;
-  gap: 20px;
+  gap: 10px;
+  height: calc(100vh - 120px);
+  overflow: hidden;
 }
 
 .left-panel,
 .right-panel {
   flex: 1;
-  padding: 15px;
-  border-radius: 8px;
+  padding: 10px;
+  border-radius: 5px;
   background-color: #f5f5f5;
+  overflow-y: auto;
+}
+
+h2, h3 {
+  margin: 6px 0;
+  font-size: 1.1em;
 }
 
 .number-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 10px;
-  margin-bottom: 20px;
+  gap: 5px;
+  margin-bottom: 12px;
 }
 
 .number-item {
-  padding: 8px;
-  border-radius: 4px;
+  padding: 5px;
+  border-radius: 3px;
   text-align: center;
+  font-size: 12px;
 }
 
 .number-item input {
-  width: 80%;
-  padding: 5px;
-  margin-top: 5px;
+  width: 70%;
+  padding: 3px;
+  margin-top: 3px;
+  font-size: 12px;
   text-align: center;
 }
 
@@ -859,45 +874,49 @@ export default {
 .color-bet-container {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 10px;
-  margin-bottom: 20px;
+  gap: 6px;
+  margin-bottom: 12px;
 }
 
 .zodiac-bet-item,
 .color-bet-item {
-  padding: 8px;
-  border-radius: 4px;
+  padding: 5px;
+  border-radius: 3px;
   text-align: center;
   border: 1px solid #ddd;
+  font-size: 12px;
 }
 
 .zodiac-bet-item input,
 .color-bet-item input {
-  width: 80%;
-  padding: 5px;
-  margin-top: 5px;
+  width: 70%;
+  padding: 3px;
+  margin-top: 3px;
+  font-size: 12px;
   text-align: center;
 }
 
 .zodiac-numbers,
 .color-numbers {
-  font-size: 0.8em;
+  font-size: 0.7em;
   color: #666;
-  margin-top: 5px;
+  margin-top: 3px;
 }
 
 .header-buttons {
   display: flex;
-  gap: 10px;
-  margin-top: 20px;
+  gap: 8px;
+  margin-top: 12px;
 }
 
+/* 按钮样式 - 完全保留 */
 button {
-  padding: 8px 15px;
+  padding: 6px 12px;
   border: none;
-  border-radius: 4px;
+  border-radius: 3px;
   cursor: pointer;
   font-weight: bold;
+  font-size: 12px;
 }
 
 .submit-btn {
@@ -918,40 +937,43 @@ button {
 .result-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 10px;
-  margin-bottom: 20px;
+  gap: 5px;
+  margin-bottom: 12px;
 }
 
 .result-item {
-  padding: 8px;
-  border-radius: 4px;
+  padding: 5px;
+  border-radius: 3px;
   text-align: center;
   border: 1px solid #ddd;
+  font-size: 12px;
 }
 
 .zodiac-result-container,
 .color-result-container {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 10px;
-  margin-bottom: 20px;
+  gap: 6px;
+  margin-bottom: 12px;
 }
 
 .zodiac-result-item,
 .color-result-item {
-  padding: 8px;
-  border-radius: 4px;
+  padding: 5px;
+  border-radius: 3px;
   text-align: center;
   border: 1px solid #ddd;
+  font-size: 12px;
 }
 
 .total {
-  font-size: 1.2em;
+  font-size: 20px;
   font-weight: bold;
-  text-align: right;
-  margin-top: 20px;
+  text-align: center;
+  margin-top: 40px;
 }
 
+/* 弹窗样式 - 完全保留 */
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -967,23 +989,28 @@ button {
 
 .modal-content {
   background-color: white;
-  padding: 20px;
-  border-radius: 8px;
+  padding: 15px;
+  border-radius: 6px;
   max-width: 500px;
   width: 90%;
-  max-height: 80vh;
+  max-height: 70vh;
   overflow-y: auto;
+}
+
+.modal-content h3 {
+  margin-top: 0;
 }
 
 .modal-content textarea {
   width: 100%;
-  margin-bottom: 15px;
+  margin-bottom: 12px;
+  font-size: 13px;
 }
 
 .modal-buttons {
   display: flex;
   justify-content: flex-end;
-  gap: 10px;
+  gap: 8px;
 }
 
 .parse-btn,
@@ -998,33 +1025,68 @@ button {
 }
 
 .history-modal {
-  max-width: 800px;
+  max-width: 700px;
 }
 
+.confirm-modal {
+  max-width: 350px;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 1.3em;
+  cursor: pointer;
+  padding: 0;
+}
+
+.export-btn {
+  background-color: #2196f3;
+  color: white;
+}
+
+/* 下注记录样式 - 完全保留 */
 .history-item {
-  margin-bottom: 15px;
+  margin-bottom: 10px;
   border: 1px solid #ddd;
   border-radius: 4px;
-  padding: 10px;
+  padding: 8px;
 }
 
 .history-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
+  font-size: 12px;
+}
+
+.history-time {
+  font-weight: bold;
+}
+
+.history-total {
+  color: #4caf50;
+  font-weight: bold;
 }
 
 .history-details {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 6px;
 }
 
 .bet-detail {
-  padding: 5px 8px;
-  border-radius: 4px;
-  font-size: 0.9em;
+  padding: 4px 6px;
+  border-radius: 3px;
+  font-size: 0.8em;
 }
 
 .red-wave {
@@ -1042,50 +1104,32 @@ button {
   border-left: 3px solid rgba(0, 255, 0, 0.7);
 }
 
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 15px;
+.empty-history {
+  text-align: center;
+  color: #666;
+  padding: 15px;
 }
 
-.close-btn {
-  background: none;
-  border: none;
-  font-size: 1.5em;
-  cursor: pointer;
-}
-
-.export-btn {
-  background-color: #2196f3;
+/* 成功提示样式 - 完全保留 */
+.success-message {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: #4caf50;
   color: white;
+  padding: 12px 25px;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  z-index: 1001;
+  animation: fadeInOut 2s ease-in-out;
 }
 
 .delete-btn {
   background-color: #f44336;
   color: white;
-  padding: 3px 8px;
-  font-size: 0.8em;
-}
-
-.empty-history {
-  text-align: center;
-  color: #666;
-  padding: 20px;
-}
-/* 成功提示样式 */
-.success-message {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translateX(-50%, -50%);
-  background-color: #4caf50;
-  color: white;
-  padding: 15px 30px;
-  border-radius: 4px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
-  z-index: 1001;
-  animation: fadeInOut 2s ease-in-out;
+  padding: 2px 6px;
+  font-size: 0.7em;
 }
 
 @keyframes fadeInOut {
@@ -1100,6 +1144,29 @@ button {
   }
   100% {
     opacity: 0;
+  }
+}
+
+/* 响应式调整 */
+@media (max-width: 1600px) {
+  .zodiac-bet-container,
+  .color-bet-container,
+  .zodiac-result-container,
+  .color-result-container {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 1400px) {
+  .number-grid {
+    grid-template-columns: repeat(6, 1fr);
+  }
+  
+  .zodiac-bet-container,
+  .color-bet-container,
+  .zodiac-result-container,
+  .color-result-container {
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 </style>
