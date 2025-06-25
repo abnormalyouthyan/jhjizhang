@@ -617,73 +617,132 @@ export default {
       showHistoryModal.value = true
     }
     // 智能识别输入（支持多种格式和负数）
-    const parseSmartInput = () => {
-      try {
-        const input = smartInputText.value.trim()
-        if (!input) return
+// 修改parseSmartInput方法
+const parseSmartInput = () => {
+  try {
+    const input = smartInputText.value.trim()
+    if (!input) return
 
-        // 统一处理所有分隔符（中文顿号、中文逗号、英文逗号、斜杠、点、句号）
-        // 但保留连续点号作为分隔符的特殊情况
-        let normalizedInput = input
-          .replace(/、|，|。|\/|\.(?=\D)/g, ',') // 替换非数字间的点号
-          .replace(/\s+/g, '') // 移除所有空格
+    // 统一处理所有分隔符（中文顿号、中文逗号、英文逗号、斜杠、点、句号）
+    let normalizedInput = input
+      .replace(/、|，|。|\/|\.(?=\D)/g, ',') // 替换非数字间的点号
+      .replace(/\s+/g, '') // 移除所有空格
 
-        // 特殊处理连续点号分隔的数字（如1.2.3-10）
-        if (/^\d+(\.\d+)+[-各粒个]/.test(normalizedInput)) {
-          normalizedInput = normalizedInput.replace(/\./g, ',')
+    // 特殊处理"各X"格式（移动到前面处理）
+    if (normalizedInput.includes('各')) {
+      const parts = normalizedInput.split('各')
+      if (parts.length === 2) {
+        const items = parts[0].split(',')
+        const amount = parseFloat(parts[1]) || 0
+        if (amount !== 0) {
+          items.forEach(item => {
+            if (!item) return
+            
+            // 处理波色
+            if (['红波', '红', 'red'].includes(item.toLowerCase())) {
+              currentColorBets.value.red = (currentColorBets.value.red || 0) + amount
+            } else if (['蓝波', '蓝', 'blue'].includes(item.toLowerCase())) {
+              currentColorBets.value.blue = (currentColorBets.value.blue || 0) + amount
+            } else if (['绿波', '绿', 'green'].includes(item.toLowerCase())) {
+              currentColorBets.value.green = (currentColorBets.value.green || 0) + amount
+            } 
+            // 处理生肖
+            else if (zodiacList.includes(item)) {
+              currentZodiacBets.value[item] = (currentZodiacBets.value[item] || 0) + amount
+            }
+            // 处理数字
+            else {
+              const num = parseInt(item)
+              if (!isNaN(num) && num >= 1 && num <= 49) {
+                currentBets.value[num] = (currentBets.value[num] || 0) + amount
+              }
+            }
+          })
+          
+          showSmartInput.value = false
+          smartInputText.value = ''
+          return
         }
-
-        // 解析金额部分（支持"各X"/"一粒X"/"一个X"/"-X"等格式）
-        const amountPattern = /((各|一粒|一个|-)(\d+))|(-?\d+)$/
-        const amountMatch = normalizedInput.match(amountPattern)
-
-        let amount = 0
-        let numbersPart = normalizedInput
-
-        if (amountMatch) {
-          // 处理"各X"/"一粒X"/"一个X"格式
-          if (amountMatch[2]) {
-            amount = parseFloat(amountMatch[3]) || 0
-            numbersPart = normalizedInput.substring(0, amountMatch.index)
-          }
-          // 处理"-X"或单独数字格式
-          else if (amountMatch[4]) {
-            amount = parseFloat(amountMatch[4]) || 0
-            numbersPart = normalizedInput.substring(0, amountMatch.index)
-          }
-        }
-
-        if (amount === 0) {
-          return // 无效金额不处理
-        }
-
-        // 处理号码部分（支持多种分隔符）
-        const numberStrings = numbersPart.split(',')
-        const validNumbers = []
-
-        numberStrings.forEach((numStr) => {
-          if (!numStr) return
-          const num = parseInt(numStr)
-          if (!isNaN(num) && num >= 1 && num <= 49) {
-            validNumbers.push(num)
-          }
-        })
-
-        if (validNumbers.length === 0) {
-          return // 无有效号码不处理
-        }
-
-        // 应用到当前下注（累加模式，支持负数）
-        validNumbers.forEach((num) => {
-          currentBets.value[num] = (currentBets.value[num] || 0) + amount
-        })
-
-        showSmartInput.value = false
-        smartInputText.value = ''
-      } catch (error) {
-        console.error('智能识别错误:', error)
       }
     }
+
+    // 以下是原有的处理逻辑（处理其他格式）
+    const amountPattern = /((一粒|一个|-)(\d+))|(-?\d+)$/
+    const amountMatch = normalizedInput.match(amountPattern)
+
+    let amount = 0
+    let itemsPart = normalizedInput
+
+    if (amountMatch) {
+      // 处理"一粒X"/"一个X"格式
+      if (amountMatch[2]) {
+        amount = parseFloat(amountMatch[3]) || 0
+        itemsPart = normalizedInput.substring(0, amountMatch.index)
+      }
+      // 处理"-X"或单独数字格式
+      else if (amountMatch[4]) {
+        amount = parseFloat(amountMatch[4]) || 0
+        itemsPart = normalizedInput.substring(0, amountMatch.index)
+      }
+    }
+
+    if (amount === 0) {
+      return // 无效金额不处理
+    }
+
+    // 处理号码/生肖/波色部分
+    const itemStrings = itemsPart.split(',')
+    const validNumbers = []
+    const validZodiacs = []
+    let colorType = null
+
+    itemStrings.forEach((itemStr) => {
+      if (!itemStr) return
+      
+      // 检查是否是波色
+      if (['红波', '红', 'red'].includes(itemStr.toLowerCase())) {
+        colorType = 'red'
+      } else if (['蓝波', '蓝', 'blue'].includes(itemStr.toLowerCase())) {
+        colorType = 'blue'
+      } else if (['绿波', '绿', 'green'].includes(itemStr.toLowerCase())) {
+        colorType = 'green'
+      } 
+      // 检查是否是生肖
+      else if (zodiacList.includes(itemStr)) {
+        validZodiacs.push(itemStr)
+      }
+      // 否则尝试解析为数字
+      else {
+        const num = parseInt(itemStr)
+        if (!isNaN(num) && num >= 1 && num <= 49) {
+          validNumbers.push(num)
+        }
+      }
+    })
+
+    if (validNumbers.length === 0 && validZodiacs.length === 0 && !colorType) {
+      return // 无有效项不处理
+    }
+
+    // 应用到当前下注
+    validNumbers.forEach((num) => {
+      currentBets.value[num] = (currentBets.value[num] || 0) + amount
+    })
+
+    validZodiacs.forEach((zodiac) => {
+      currentZodiacBets.value[zodiac] = (currentZodiacBets.value[zodiac] || 0) + amount
+    })
+
+    if (colorType) {
+      currentColorBets.value[colorType] = (currentColorBets.value[colorType] || 0) + amount
+    }
+
+    showSmartInput.value = false
+    smartInputText.value = ''
+  } catch (error) {
+    console.error('智能识别错误:', error)
+  }
+}
 
     // 导出到Excel
     const exportToExcel = () => {
