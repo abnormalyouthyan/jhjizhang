@@ -229,7 +229,7 @@
             <div class="result-amount">{{ safeToFixed(totalColorBets.red) }}</div>
           </div>
           <div class="color-result-item blue-wave">
-            <div class="color-label">蓝波 </div>
+            <div class="color-label">蓝波</div>
             <div class="result-amount">{{ safeToFixed(totalColorBets.blue) }}</div>
           </div>
           <div class="color-result-item green-wave">
@@ -244,379 +244,376 @@
   </div>
 </template>
 
-<script>
+<script setup>
 import { ref, computed, onMounted } from 'vue'
 import * as XLSX from 'xlsx'
+const numbers = Array.from({ length: 49 }, (_, i) => i + 1)
+const inputFields = ref([])
+const zodiacList = ['鼠', '牛', '虎', '兔', '龙', '蛇', '马', '羊', '猴', '鸡', '狗', '猪']
 
-export default {
-  setup() {
-    const numbers = Array.from({ length: 49 }, (_, i) => i + 1)
-    const inputFields = ref([])
-    const zodiacList = ['鼠', '牛', '虎', '兔', '龙', '蛇', '马', '羊', '猴', '鸡', '狗', '猪']
+// 生肖映射
+const zodiacMap = {
+  1: '蛇',
+  2: '龙',
+  3: '兔',
+  4: '虎',
+  5: '牛',
+  6: '鼠',
+  7: '猪',
+  8: '狗',
+  9: '鸡',
+  10: '猴',
+  11: '羊',
+  12: '马',
+  13: '蛇',
+  14: '龙',
+  15: '兔',
+  16: '虎',
+  17: '牛',
+  18: '鼠',
+  19: '猪',
+  20: '狗',
+  21: '鸡',
+  22: '猴',
+  23: '羊',
+  24: '马',
+  25: '蛇',
+  26: '龙',
+  27: '兔',
+  28: '虎',
+  29: '牛',
+  30: '鼠',
+  31: '猪',
+  32: '狗',
+  33: '鸡',
+  34: '猴',
+  35: '羊',
+  36: '马',
+  37: '蛇',
+  38: '龙',
+  39: '兔',
+  40: '虎',
+  41: '牛',
+  42: '鼠',
+  43: '猪',
+  44: '狗',
+  45: '鸡',
+  46: '猴',
+  47: '羊',
+  48: '马',
+  49: '蛇'
+}
 
-    // 生肖映射
-    const zodiacMap = {
-      1: '蛇',
-      2: '龙',
-      3: '兔',
-      4: '虎',
-      5: '牛',
-      6: '鼠',
-      7: '猪',
-      8: '狗',
-      9: '鸡',
-      10: '猴',
-      11: '羊',
-      12: '马',
-      13: '蛇',
-      14: '龙',
-      15: '兔',
-      16: '虎',
-      17: '牛',
-      18: '鼠',
-      19: '猪',
-      20: '狗',
-      21: '鸡',
-      22: '猴',
-      23: '羊',
-      24: '马',
-      25: '蛇',
-      26: '龙',
-      27: '兔',
-      28: '虎',
-      29: '牛',
-      30: '鼠',
-      31: '猪',
-      32: '狗',
-      33: '鸡',
-      34: '猴',
-      35: '羊',
-      36: '马',
-      37: '蛇',
-      38: '龙',
-      39: '兔',
-      40: '虎',
-      41: '牛',
-      42: '鼠',
-      43: '猪',
-      44: '狗',
-      45: '鸡',
-      46: '猴',
-      47: '羊',
-      48: '马',
-      49: '蛇'
+// 生肖反向映射
+const zodiacToNumbers = {}
+zodiacList.forEach((zodiac) => {
+  zodiacToNumbers[zodiac] = []
+})
+numbers.forEach((num) => {
+  const zodiac = zodiacMap[num]
+  if (zodiac && zodiacToNumbers[zodiac]) {
+    zodiacToNumbers[zodiac].push(num)
+  }
+})
+
+// 波色分组（直接基于数字）
+const colorToNumbers = {
+  red: [1, 2, 7, 8, 12, 13, 18, 19, 23, 24, 29, 30, 34, 35, 40, 45, 46],
+  blue: [3, 4, 9, 10, 14, 15, 20, 25, 26, 31, 36, 37, 41, 42, 47, 48],
+  green: [5, 6, 11, 16, 17, 21, 22, 27, 28, 32, 33, 38, 39, 43, 44, 49]
+}
+
+// 获取波色对应的数字
+const getColorNumbers = (color) => {
+  return colorToNumbers[color] || []
+}
+// 当前输入的下注金额
+const currentBets = ref({})
+// 当前生肖下注
+const currentZodiacBets = ref({})
+// 当前波色下注
+const currentColorBets = ref({
+  red: 0,
+  blue: 0,
+  green: 0
+})
+// 总下注金额记录
+const totalBets = ref({})
+// 总生肖下注
+const totalZodiacBets = ref({})
+// 总波色下注
+const totalColorBets = ref({
+  red: 0,
+  blue: 0,
+  green: 0
+})
+// 下注历史记录
+const bettingHistory = ref([])
+// 弹窗状态
+const showSmartInput = ref(false)
+const showHistoryModal = ref(false)
+const showConfirmModal = ref(false)
+const showSuccess = ref(false)
+const smartInputText = ref('')
+const deleteIndex = ref(null)
+
+// 获取生肖对应的数字
+const getZodiacNumbers = (zodiac) => {
+  return zodiacToNumbers[zodiac] || []
+}
+
+// 安全数值格式化
+const safeToFixed = (value, digits = 2) => {
+  const num = Number(value)
+  return isNaN(num) ? '0.00' : num.toFixed(digits)
+}
+
+// 获取有效的下注号码
+const getValidBets = (bets) => {
+  return Object.keys(bets || {}).filter((n) => bets[n] !== 0) // 修改为不等于0
+}
+
+// 获取有效的生肖下注
+const getValidZodiacBets = (zodiacBets) => {
+  return Object.keys(zodiacBets || {}).filter((z) => zodiacBets[z] !== 0) // 修改为不等于0
+}
+
+// 获取单个号码的总下注金额
+const getTotalBet = (number) => {
+  const total = Number(totalBets.value[number]) || 0
+  return total > 0 ? total : 0 // 确保不会显示负数
+}
+
+// 初始化数据
+const initializeData = () => {
+  numbers.forEach((num) => {
+    currentBets.value[num] = 0
+    totalBets.value[num] = 0
+  })
+
+  // 初始化生肖下注
+  zodiacList.forEach((zodiac) => {
+    currentZodiacBets.value[zodiac] = 0
+    totalZodiacBets.value[zodiac] = 0
+  })
+
+  // 初始化波色下注
+  currentColorBets.value = { red: 0, blue: 0, green: 0 }
+  totalColorBets.value = { red: 0, blue: 0, green: 0 }
+
+  loadHistory()
+}
+
+// 从本地存储加载历史记录
+const loadHistory = () => {
+  const savedHistory = localStorage.getItem('bettingHistory')
+  if (savedHistory) {
+    try {
+      bettingHistory.value = JSON.parse(savedHistory) || []
+      recalculateTotalBets()
+    } catch (e) {
+      console.error('解析历史记录出错:', e)
+      bettingHistory.value = []
     }
+  }
+}
 
-    // 生肖反向映射
-    const zodiacToNumbers = {}
-    zodiacList.forEach((zodiac) => {
-      zodiacToNumbers[zodiac] = []
-    })
-    numbers.forEach((num) => {
-      const zodiac = zodiacMap[num]
-      if (zodiac && zodiacToNumbers[zodiac]) {
-        zodiacToNumbers[zodiac].push(num)
-      }
-    })
+// 重新计算总下注金额（支持负数）
+const recalculateTotalBets = () => {
+  // 重置数字下注
+  numbers.forEach((num) => {
+    totalBets.value[num] = 0
+  })
 
-    // 波色分组（直接基于数字）
-    const colorToNumbers = {
-      red: [1, 2, 7, 8, 12, 13, 18, 19, 23, 24, 29, 30, 34, 35, 40, 45, 46],
-      blue: [3, 4, 9, 10, 14, 15, 20, 25, 26, 31, 36, 37, 41, 42, 47, 48],
-      green: [5, 6, 11, 16, 17, 21, 22, 27, 28, 32, 33, 38, 39, 43, 44, 49]
-    }
+  // 重置生肖下注
+  zodiacList.forEach((zodiac) => {
+    totalZodiacBets.value[zodiac] = 0
+  })
 
-    // 获取波色对应的数字
-    const getColorNumbers = (color) => {
-      return colorToNumbers[color] || []
-    }
-    // 当前输入的下注金额
-    const currentBets = ref({})
-    // 当前生肖下注
-    const currentZodiacBets = ref({})
-    // 当前波色下注
-    const currentColorBets = ref({
-      red: 0,
-      blue: 0,
-      green: 0
-    })
-    // 总下注金额记录
-    const totalBets = ref({})
-    // 总生肖下注
-    const totalZodiacBets = ref({})
-    // 总波色下注
-    const totalColorBets = ref({
-      red: 0,
-      blue: 0,
-      green: 0
-    })
-    // 下注历史记录
-    const bettingHistory = ref([])
-    // 弹窗状态
-    const showSmartInput = ref(false)
-    const showHistoryModal = ref(false)
-    const showConfirmModal = ref(false)
-    const showSuccess = ref(false)
-    const smartInputText = ref('')
-    const deleteIndex = ref(null)
+  // 重置波色下注
+  totalColorBets.value = { red: 0, blue: 0, green: 0 }
 
-    // 获取生肖对应的数字
-    const getZodiacNumbers = (zodiac) => {
-      return zodiacToNumbers[zodiac] || []
-    }
-
-    // 安全数值格式化
-    const safeToFixed = (value, digits = 2) => {
-      const num = Number(value)
-      return isNaN(num) ? '0.00' : num.toFixed(digits)
-    }
-
-    // 获取有效的下注号码
-    const getValidBets = (bets) => {
-      return Object.keys(bets || {}).filter((n) => bets[n] !== 0) // 修改为不等于0
-    }
-
-    // 获取有效的生肖下注
-    const getValidZodiacBets = (zodiacBets) => {
-      return Object.keys(zodiacBets || {}).filter((z) => zodiacBets[z] !== 0) // 修改为不等于0
-    }
-
-    // 获取单个号码的总下注金额
-    const getTotalBet = (number) => {
-      const total = Number(totalBets.value[number]) || 0
-      return total > 0 ? total : 0 // 确保不会显示负数
-    }
-
-    // 初始化数据
-    const initializeData = () => {
+  bettingHistory.value.forEach((record) => {
+    if (record && record.bets) {
+      // 统计数字下注金额（支持负数）
       numbers.forEach((num) => {
-        currentBets.value[num] = 0
-        totalBets.value[num] = 0
+        totalBets.value[num] += Number(record.bets[num]) || 0
       })
 
-      // 初始化生肖下注
-      zodiacList.forEach((zodiac) => {
-        currentZodiacBets.value[zodiac] = 0
-        totalZodiacBets.value[zodiac] = 0
-      })
-
-      // 初始化波色下注
-      currentColorBets.value = { red: 0, blue: 0, green: 0 }
-      totalColorBets.value = { red: 0, blue: 0, green: 0 }
-
-      loadHistory()
-    }
-
-    // 从本地存储加载历史记录
-    const loadHistory = () => {
-      const savedHistory = localStorage.getItem('bettingHistory')
-      if (savedHistory) {
-        try {
-          bettingHistory.value = JSON.parse(savedHistory) || []
-          recalculateTotalBets()
-        } catch (e) {
-          console.error('解析历史记录出错:', e)
-          bettingHistory.value = []
-        }
-      }
-    }
-
-    // 重新计算总下注金额（支持负数）
-    const recalculateTotalBets = () => {
-      // 重置数字下注
-      numbers.forEach((num) => {
-        totalBets.value[num] = 0
-      })
-
-      // 重置生肖下注
-      zodiacList.forEach((zodiac) => {
-        totalZodiacBets.value[zodiac] = 0
-      })
-
-      // 重置波色下注
-      totalColorBets.value = { red: 0, blue: 0, green: 0 }
-
-      bettingHistory.value.forEach((record) => {
-        if (record && record.bets) {
-          // 统计数字下注金额（支持负数）
-          numbers.forEach((num) => {
-            totalBets.value[num] += Number(record.bets[num]) || 0
-          })
-
-          // 生肖下注只汇总到生肖下注区域（支持负数）
-          if (record.zodiacBets) {
-            zodiacList.forEach((zodiac) => {
-              const zodiacAmount = Number(record.zodiacBets[zodiac]) || 0
-              totalZodiacBets.value[zodiac] += zodiacAmount * getZodiacNumbers(zodiac).length
-            })
-          }
-
-          // 波色下注只汇总到波色区域（支持负数）
-          if (record.colorBets) {
-            const redAmount = Number(record.colorBets.red) || 0
-            totalColorBets.value.red += redAmount * getColorNumbers('red').length
-
-            const blueAmount = Number(record.colorBets.blue) || 0
-            totalColorBets.value.blue += blueAmount * getColorNumbers('blue').length
-
-            const greenAmount = Number(record.colorBets.green) || 0
-            totalColorBets.value.green += greenAmount * getColorNumbers('green').length
-          }
-        }
-      })
-
-      // 确保金额不会为负数
-      numbers.forEach((num) => {
-        if (totalBets.value[num] < 0) totalBets.value[num] = 0
-      })
-      zodiacList.forEach((zodiac) => {
-        if (totalZodiacBets.value[zodiac] < 0) totalZodiacBets.value[zodiac] = 0
-      })
-      if (totalColorBets.value.red < 0) totalColorBets.value.red = 0
-      if (totalColorBets.value.blue < 0) totalColorBets.value.blue = 0
-      if (totalColorBets.value.green < 0) totalColorBets.value.green = 0
-    }
-
-    // 保存历史记录到本地存储
-    const saveHistory = () => {
-      localStorage.setItem('bettingHistory', JSON.stringify(bettingHistory.value))
-    }
-
-    // 计算总下注金额
-    const totalAmount = computed(() => {
-      const numberTotal = numbers.reduce((sum, num) => sum + (getTotalBet(num) || 0), 0)
-
-      const zodiacTotal = zodiacList.reduce((sum, zodiac) => {
-        const amount = Number(totalZodiacBets.value[zodiac]) || 0
-        return sum + (amount > 0 ? amount : 0)
-      }, 0)
-
-      const colorTotal = ['red', 'blue', 'green'].reduce((sum, color) => {
-        const amount = Number(totalColorBets.value[color]) || 0
-        return sum + (amount > 0 ? amount : 0)
-      }, 0)
-
-      return numberTotal + zodiacTotal + colorTotal
-    })
-
-    // 获取数字对应的生肖
-    const getZodiac = (number) => {
-      return zodiacMap[number] || ''
-    }
-
-    // 获取数字对应的颜色
-    const getZodiacColor = (number, opacity = 1) => {
-      if (colorToNumbers.red.includes(number)) {
-        return `rgba(255, 0, 0, ${opacity})`
-      } else if (colorToNumbers.blue.includes(number)) {
-        return `rgba(0, 0, 255, ${opacity})`
-      } else if (colorToNumbers.green.includes(number)) {
-        return `rgba(0, 255, 0, ${opacity})`
-      }
-      return ''
-    }
-
-    // 根据生肖获取颜色
-    const getZodiacColorByZodiac = (zodiac, opacity = 1) => {
-      // 查找该生肖对应的第一个数字的颜色
-      const numbers = getZodiacNumbers(zodiac)
-      if (numbers.length > 0) {
-        return getZodiacColor(numbers[0], opacity)
-      }
-      return ''
-    }
-
-    // 格式化时间显示
-    const formatTime = (timestamp) => {
-      const date = new Date(timestamp)
-      return `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')} ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}:${date.getSeconds().toString().padStart(2, '0')}`
-    }
-
-    // 提交下注（支持负数）
-    const submitBets = () => {
-      let currentTotal = 0
-      const bets = {}
-      const zodiacBets = {}
-
-      // 计算数字下注（允许负数）
-      numbers.forEach((num) => {
-        const amount = Number(currentBets.value[num]) || 0
-        bets[num] = amount
-        currentTotal += amount
-        currentBets.value[num] = 0
-      })
-
-      // 计算生肖下注（允许负数）
-      zodiacList.forEach((zodiac) => {
-        const amount = Number(currentZodiacBets.value[zodiac]) || 0
-        zodiacBets[zodiac] = amount
-        if (amount !== 0) {
-          const zodiacNums = getZodiacNumbers(zodiac)
-          currentTotal += amount * zodiacNums.length
-        }
-        currentZodiacBets.value[zodiac] = 0
-      })
-
-      // 计算波色下注（允许负数）
-      const colorBets = {
-        red: Number(currentColorBets.value.red) || 0,
-        blue: Number(currentColorBets.value.blue) || 0,
-        green: Number(currentColorBets.value.green) || 0
-      }
-      if (colorBets.red !== 0) {
-        const redNums = getColorNumbers('red')
-        currentTotal += colorBets.red * redNums.length
-      }
-      if (colorBets.blue !== 0) {
-        const blueNums = getColorNumbers('blue')
-        currentTotal += colorBets.blue * blueNums.length
-      }
-      if (colorBets.green !== 0) {
-        const greenNums = getColorNumbers('green')
-        currentTotal += colorBets.green * greenNums.length
-      }
-
-      // 重置波色下注输入
-      currentColorBets.value = { red: 0, blue: 0, green: 0 }
-
-      // 只要有变动（正数或负数）就记录
-      if (currentTotal !== 0) {
-        bettingHistory.value.unshift({
-          timestamp: Date.now(),
-          bets: bets,
-          zodiacBets: zodiacBets,
-          colorBets: colorBets,
-          total: currentTotal
+      // 生肖下注只汇总到生肖下注区域（支持负数）
+      if (record.zodiacBets) {
+        zodiacList.forEach((zodiac) => {
+          const zodiacAmount = Number(record.zodiacBets[zodiac]) || 0
+          totalZodiacBets.value[zodiac] += zodiacAmount * getZodiacNumbers(zodiac).length
         })
-        saveHistory()
-        recalculateTotalBets()
-        showSuccess.value = true
-        // 2秒后自动隐藏成功提示
-        setTimeout(() => {
-          showSuccess.value = false
-        }, 2000)
-        }
-    }
-
-    // 打开删除确认弹窗
-    const openDeleteConfirm = (index) => {
-      deleteIndex.value = index
-      showConfirmModal.value = true
-      showHistoryModal.value = false
-    }
-
-    // 删除记录
-    const deleteRecord = () => {
-      if (deleteIndex.value !== null) {
-        bettingHistory.value.splice(deleteIndex.value, 1)
-        saveHistory()
-        recalculateTotalBets()
       }
-      showConfirmModal.value = false
-      deleteIndex.value = null
-      showHistoryModal.value = true
+
+      // 波色下注只汇总到波色区域（支持负数）
+      if (record.colorBets) {
+        const redAmount = Number(record.colorBets.red) || 0
+        totalColorBets.value.red += redAmount * getColorNumbers('red').length
+
+        const blueAmount = Number(record.colorBets.blue) || 0
+        totalColorBets.value.blue += blueAmount * getColorNumbers('blue').length
+
+        const greenAmount = Number(record.colorBets.green) || 0
+        totalColorBets.value.green += greenAmount * getColorNumbers('green').length
+      }
     }
-    // 智能识别输入（支持多种格式和负数）
+  })
+
+  // 确保金额不会为负数
+  numbers.forEach((num) => {
+    if (totalBets.value[num] < 0) totalBets.value[num] = 0
+  })
+  zodiacList.forEach((zodiac) => {
+    if (totalZodiacBets.value[zodiac] < 0) totalZodiacBets.value[zodiac] = 0
+  })
+  if (totalColorBets.value.red < 0) totalColorBets.value.red = 0
+  if (totalColorBets.value.blue < 0) totalColorBets.value.blue = 0
+  if (totalColorBets.value.green < 0) totalColorBets.value.green = 0
+}
+
+// 保存历史记录到本地存储
+const saveHistory = () => {
+  localStorage.setItem('bettingHistory', JSON.stringify(bettingHistory.value))
+}
+
+// 计算总下注金额
+const totalAmount = computed(() => {
+  const numberTotal = numbers.reduce((sum, num) => sum + (getTotalBet(num) || 0), 0)
+
+  const zodiacTotal = zodiacList.reduce((sum, zodiac) => {
+    const amount = Number(totalZodiacBets.value[zodiac]) || 0
+    return sum + (amount > 0 ? amount : 0)
+  }, 0)
+
+  const colorTotal = ['red', 'blue', 'green'].reduce((sum, color) => {
+    const amount = Number(totalColorBets.value[color]) || 0
+    return sum + (amount > 0 ? amount : 0)
+  }, 0)
+
+  return numberTotal + zodiacTotal + colorTotal
+})
+
+// 获取数字对应的生肖
+const getZodiac = (number) => {
+  return zodiacMap[number] || ''
+}
+
+// 获取数字对应的颜色
+const getZodiacColor = (number, opacity = 1) => {
+  if (colorToNumbers.red.includes(number)) {
+    return `rgba(255, 0, 0, ${opacity})`
+  } else if (colorToNumbers.blue.includes(number)) {
+    return `rgba(0, 0, 255, ${opacity})`
+  } else if (colorToNumbers.green.includes(number)) {
+    return `rgba(0, 255, 0, ${opacity})`
+  }
+  return ''
+}
+
+// 根据生肖获取颜色
+const getZodiacColorByZodiac = (zodiac, opacity = 1) => {
+  // 查找该生肖对应的第一个数字的颜色
+  const numbers = getZodiacNumbers(zodiac)
+  if (numbers.length > 0) {
+    return getZodiacColor(numbers[0], opacity)
+  }
+  return ''
+}
+
+// 格式化时间显示
+const formatTime = (timestamp) => {
+  const date = new Date(timestamp)
+  return `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')} ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}:${date.getSeconds().toString().padStart(2, '0')}`
+}
+
+// 提交下注（支持负数）
+const submitBets = () => {
+  let currentTotal = 0
+  const bets = {}
+  const zodiacBets = {}
+
+  // 计算数字下注（允许负数）
+  numbers.forEach((num) => {
+    const amount = Number(currentBets.value[num]) || 0
+    bets[num] = amount
+    currentTotal += amount
+    currentBets.value[num] = 0
+  })
+
+  // 计算生肖下注（允许负数）
+  zodiacList.forEach((zodiac) => {
+    const amount = Number(currentZodiacBets.value[zodiac]) || 0
+    zodiacBets[zodiac] = amount
+    if (amount !== 0) {
+      const zodiacNums = getZodiacNumbers(zodiac)
+      currentTotal += amount * zodiacNums.length
+    }
+    currentZodiacBets.value[zodiac] = 0
+  })
+
+  // 计算波色下注（允许负数）
+  const colorBets = {
+    red: Number(currentColorBets.value.red) || 0,
+    blue: Number(currentColorBets.value.blue) || 0,
+    green: Number(currentColorBets.value.green) || 0
+  }
+  if (colorBets.red !== 0) {
+    const redNums = getColorNumbers('red')
+    currentTotal += colorBets.red * redNums.length
+  }
+  if (colorBets.blue !== 0) {
+    const blueNums = getColorNumbers('blue')
+    currentTotal += colorBets.blue * blueNums.length
+  }
+  if (colorBets.green !== 0) {
+    const greenNums = getColorNumbers('green')
+    currentTotal += colorBets.green * greenNums.length
+  }
+
+  // 重置波色下注输入
+  currentColorBets.value = { red: 0, blue: 0, green: 0 }
+
+  // 只要有变动（正数或负数）就记录
+  if (currentTotal !== 0) {
+    bettingHistory.value.unshift({
+      timestamp: Date.now(),
+      bets: bets,
+      zodiacBets: zodiacBets,
+      colorBets: colorBets,
+      total: currentTotal
+    })
+    saveHistory()
+    recalculateTotalBets()
+    showSuccess.value = true
+    // 2秒后自动隐藏成功提示
+    setTimeout(() => {
+      showSuccess.value = false
+    }, 2000)
+  }
+}
+
+// 打开删除确认弹窗
+const openDeleteConfirm = (index) => {
+  deleteIndex.value = index
+  showConfirmModal.value = true
+  showHistoryModal.value = false
+}
+
+// 删除记录
+const deleteRecord = () => {
+  if (deleteIndex.value !== null) {
+    bettingHistory.value.splice(deleteIndex.value, 1)
+    saveHistory()
+    recalculateTotalBets()
+  }
+  showConfirmModal.value = false
+  deleteIndex.value = null
+  showHistoryModal.value = true
+}
+// 智能识别输入（支持多种格式和负数）
 // 修改parseSmartInput方法
 const parseSmartInput = () => {
   try {
@@ -635,9 +632,9 @@ const parseSmartInput = () => {
         const items = parts[0].split(',')
         const amount = parseFloat(parts[1]) || 0
         if (amount !== 0) {
-          items.forEach(item => {
+          items.forEach((item) => {
             if (!item) return
-            
+
             // 处理波色
             if (['红波', '红', 'red'].includes(item.toLowerCase())) {
               currentColorBets.value.red = (currentColorBets.value.red || 0) + amount
@@ -645,7 +642,7 @@ const parseSmartInput = () => {
               currentColorBets.value.blue = (currentColorBets.value.blue || 0) + amount
             } else if (['绿波', '绿', 'green'].includes(item.toLowerCase())) {
               currentColorBets.value.green = (currentColorBets.value.green || 0) + amount
-            } 
+            }
             // 处理生肖
             else if (zodiacList.includes(item)) {
               currentZodiacBets.value[item] = (currentZodiacBets.value[item] || 0) + amount
@@ -658,7 +655,7 @@ const parseSmartInput = () => {
               }
             }
           })
-          
+
           showSmartInput.value = false
           smartInputText.value = ''
           return
@@ -698,7 +695,7 @@ const parseSmartInput = () => {
 
     itemStrings.forEach((itemStr) => {
       if (!itemStr) return
-      
+
       // 检查是否是波色
       if (['红波', '红', 'red'].includes(itemStr.toLowerCase())) {
         colorType = 'red'
@@ -706,7 +703,7 @@ const parseSmartInput = () => {
         colorType = 'blue'
       } else if (['绿波', '绿', 'green'].includes(itemStr.toLowerCase())) {
         colorType = 'green'
-      } 
+      }
       // 检查是否是生肖
       else if (zodiacList.includes(itemStr)) {
         validZodiacs.push(itemStr)
@@ -744,127 +741,90 @@ const parseSmartInput = () => {
   }
 }
 
-    // 导出到Excel
-    const exportToExcel = () => {
-      if (bettingHistory.value.length === 0) {
-        return
-      }
-      // 准备数据
-      const data = []
-
-      // 添加表头
-      data.push([
-        '序号',
-        '时间',
-        '下注号码',
-        '下注金额',
-        '生肖下注',
-        '生肖金额',
-        '红波',
-        '蓝波',
-        '绿波',
-        '总金额'
-      ])
-
-      // 添加数据行
-      bettingHistory.value.forEach((record, index) => {
-        const validBets = getValidBets(record.bets)
-        const betNumbers = validBets.map((num) => `${num}(${getZodiac(num)})`).join(', ')
-        const betAmounts = validBets
-          .map((num) => (record.bets[num] >= 0 ? '+' : '') + safeToFixed(record.bets[num]))
-          .join(', ')
-
-        const validZodiacBets = getValidZodiacBets(record.zodiacBets)
-        const zodiacNames = validZodiacBets.join(', ')
-        const zodiacAmounts = validZodiacBets
-          .map((z) => (record.zodiacBets[z] >= 0 ? '+' : '') + safeToFixed(record.zodiacBets[z]))
-          .join(', ')
-
-        data.push([
-          index + 1,
-          formatTime(record.timestamp),
-          betNumbers,
-          betAmounts,
-          zodiacNames,
-          zodiacAmounts,
-          record.colorBets?.red
-            ? (record.colorBets.red >= 0 ? '+' : '') + safeToFixed(record.colorBets.red)
-            : '0.00',
-          record.colorBets?.blue
-            ? (record.colorBets.blue >= 0 ? '+' : '') + safeToFixed(record.colorBets.blue)
-            : '0.00',
-          record.colorBets?.green
-            ? (record.colorBets.green >= 0 ? '+' : '') + safeToFixed(record.colorBets.green)
-            : '0.00',
-          safeToFixed(record.total)
-        ])
-      })
-
-      // 创建工作表
-      const ws = XLSX.utils.aoa_to_sheet(data)
-
-      // 设置列宽
-      ws['!cols'] = [
-        { wch: 6 }, // 序号
-        { wch: 20 }, // 时间
-        { wch: 30 }, // 下注号码
-        { wch: 15 }, // 下注金额
-        { wch: 15 }, // 生肖下注
-        { wch: 15 }, // 生肖金额
-        { wch: 8 }, // 红波
-        { wch: 8 }, // 蓝波
-        { wch: 8 }, // 绿波
-        { wch: 10 } // 总金额
-      ]
-
-      // 创建工作簿
-      const wb = XLSX.utils.book_new()
-      XLSX.utils.book_append_sheet(wb, ws, '下注记录')
-
-      // 导出文件
-      const dateStr = new Date().toISOString().slice(0, 10)
-      XLSX.writeFile(wb, `下注记录_${dateStr}.xlsx`)
-    }
-
-    // 初始化数据
-    onMounted(initializeData)
-
-    return {
-      numbers,
-      zodiacList,
-      currentBets,
-      currentZodiacBets,
-      currentColorBets,
-      totalBets,
-      totalZodiacBets,
-      totalColorBets,
-      bettingHistory,
-      showSmartInput,
-      showSuccess,
-      showHistoryModal,
-      showConfirmModal,
-      smartInputText,
-      deleteIndex,
-      inputFields,
-      safeToFixed,
-      getValidBets,
-      getValidZodiacBets,
-      getTotalBet,
-      totalAmount,
-      getZodiac,
-      getZodiacNumbers,
-      getColorNumbers,
-      getZodiacColor,
-      getZodiacColorByZodiac,
-      formatTime,
-      submitBets,
-      openDeleteConfirm,
-      deleteRecord,
-      parseSmartInput,
-      exportToExcel
-    }
+// 导出到Excel
+const exportToExcel = () => {
+  if (bettingHistory.value.length === 0) {
+    return
   }
+  // 准备数据
+  const data = []
+
+  // 添加表头
+  data.push([
+    '序号',
+    '时间',
+    '下注号码',
+    '下注金额',
+    '生肖下注',
+    '生肖金额',
+    '红波',
+    '蓝波',
+    '绿波',
+    '总金额'
+  ])
+
+  // 添加数据行
+  bettingHistory.value.forEach((record, index) => {
+    const validBets = getValidBets(record.bets)
+    const betNumbers = validBets.map((num) => `${num}(${getZodiac(num)})`).join(', ')
+    const betAmounts = validBets
+      .map((num) => (record.bets[num] >= 0 ? '+' : '') + safeToFixed(record.bets[num]))
+      .join(', ')
+
+    const validZodiacBets = getValidZodiacBets(record.zodiacBets)
+    const zodiacNames = validZodiacBets.join(', ')
+    const zodiacAmounts = validZodiacBets
+      .map((z) => (record.zodiacBets[z] >= 0 ? '+' : '') + safeToFixed(record.zodiacBets[z]))
+      .join(', ')
+
+    data.push([
+      index + 1,
+      formatTime(record.timestamp),
+      betNumbers,
+      betAmounts,
+      zodiacNames,
+      zodiacAmounts,
+      record.colorBets?.red
+        ? (record.colorBets.red >= 0 ? '+' : '') + safeToFixed(record.colorBets.red)
+        : '0.00',
+      record.colorBets?.blue
+        ? (record.colorBets.blue >= 0 ? '+' : '') + safeToFixed(record.colorBets.blue)
+        : '0.00',
+      record.colorBets?.green
+        ? (record.colorBets.green >= 0 ? '+' : '') + safeToFixed(record.colorBets.green)
+        : '0.00',
+      safeToFixed(record.total)
+    ])
+  })
+
+  // 创建工作表
+  const ws = XLSX.utils.aoa_to_sheet(data)
+
+  // 设置列宽
+  ws['!cols'] = [
+    { wch: 6 }, // 序号
+    { wch: 20 }, // 时间
+    { wch: 30 }, // 下注号码
+    { wch: 15 }, // 下注金额
+    { wch: 15 }, // 生肖下注
+    { wch: 15 }, // 生肖金额
+    { wch: 8 }, // 红波
+    { wch: 8 }, // 蓝波
+    { wch: 8 }, // 绿波
+    { wch: 10 } // 总金额
+  ]
+
+  // 创建工作簿
+  const wb = XLSX.utils.book_new()
+  XLSX.utils.book_append_sheet(wb, ws, '下注记录')
+
+  // 导出文件
+  const dateStr = new Date().toISOString().slice(0, 10)
+  XLSX.writeFile(wb, `下注记录_${dateStr}.xlsx`)
 }
+
+// 初始化数据
+onMounted(initializeData)
 </script>
 
 <style scoped>
@@ -902,7 +862,8 @@ const parseSmartInput = () => {
   overflow-y: auto;
 }
 
-h2, h3 {
+h2,
+h3 {
   margin: 6px 0;
   font-size: 1.1em;
 }
@@ -1220,7 +1181,7 @@ button {
   .number-grid {
     grid-template-columns: repeat(6, 1fr);
   }
-  
+
   .zodiac-bet-container,
   .color-bet-container,
   .zodiac-result-container,
